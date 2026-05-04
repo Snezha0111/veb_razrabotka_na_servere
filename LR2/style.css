@@ -1,0 +1,94 @@
+header{
+    display: grid;
+    grid-template-columns: 45% 45%;
+    align-items: center;
+}
+header img{
+    grid-column: 1;
+    padding: 10px;
+}
+header p{
+    grid-column: 2;
+    font-size: 20px;
+}
+main {
+    background-color: lavender;
+    height: 85vh;
+    font-size: 16px;
+    display: flex;          
+    justify-content: center; 
+    align-items: center; 
+}
+
+body {
+  margin: 0;
+}
+
+.container {
+  display: flex; 
+  flex-direction: column; 
+  min-height: 100vh; 
+}
+
+footer {
+    margin: auto;
+    text-align: center;
+}
+
+.form-box {
+    background: white;
+    align-items: center;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 300px;
+}
+
+.form-box h2 {
+    text-align: center;
+    margin: 0 0 20px 0;
+    color: #333333;
+    font-size: 24px;
+}
+
+input, select, textarea {
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #dddddd;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+input[type = 'checkbox']{
+    margin: 0 10px 0 0;
+}
+
+textarea{
+    width: 94%;
+}
+
+label {
+    margin: 0 15px 10px 0;
+    font-size: 14px;
+    display: flex;
+}
+
+button, .btn {
+    background: lightseagreen;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin: 10px 5px 0 0;
+    border-radius: 10px;
+    display: inline-block;
+    font-size: 16px;
+}
+
+button:hover, .btn:hover {
+    background: #003366;
+}
+
+textarea {
+    resize: vertical;
+}
