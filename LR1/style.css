@@ -1,0 +1,33 @@
+header{
+    display: grid;
+    grid-template-columns: 45% 45%;
+    align-items: center;
+}
+header img{
+    grid-column: 1;
+    padding: 10px;
+}
+header p{
+    grid-column: 2;
+    font-size: 20px;
+}
+main{
+    background-color: lavender;
+    height: 85vh;
+    font-size: 22px;
+}
+
+body {
+  margin: 0;
+}
+
+.container {
+  display: flex; 
+  flex-direction: column; 
+  min-height: 100vh; 
+}
+
+footer {
+    padding: 0px 10px;
+    margin-top: auto;
+}
