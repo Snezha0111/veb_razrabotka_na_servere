@@ -1,0 +1,45 @@
+<?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+try {
+    spl_autoload_register(function (string $className) {
+        require_once __DIR__ . '/src/' . $className . '.php';
+    });
+
+    $route = $_GET['route'] ?? '';
+    $routes = require __DIR__ . '/src/routes.php';
+
+    $isRouteFound = false;
+
+    foreach ($routes as $pattern => $controllerAndAction) {
+        preg_match($pattern, $route, $matches);
+        if (!empty($matches)) {
+            $isRouteFound = true;
+            break;
+        }
+    }
+
+    if (!$isRouteFound) {
+        throw new \MyProject\Exceptions\NotFoundException('Страница не найдена');
+    }
+
+    unset($matches[0]);
+
+    $controllerName = $controllerAndAction[0];
+    $actionName = $controllerAndAction[1];
+
+    $controller = new $controllerName();
+    $controller->$actionName(...$matches);
+
+} catch (\MyProject\Exceptions\DbException $e) {
+
+    $view = new \MyProject\View\View(__DIR__ . '/templates/errors');
+    $view->renderHtml('error500.php', ['error' => $e->getMessage()], 500);
+
+} catch (\MyProject\Exceptions\NotFoundException $e) {
+
+    $view = new \MyProject\View\View(__DIR__ . '/templates/errors');
+
+    $view->renderHtml('error404.php', ['error' => $e->getMessage()], 404);
+}
