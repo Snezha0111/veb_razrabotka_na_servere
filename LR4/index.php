@@ -2,6 +2,8 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
+require_once 'trig_func.php';
+
 function isnum($x) {
     if (is_numeric($x)){ 
         return true;
@@ -13,6 +15,22 @@ function isnum($x) {
         return false;
     }
     return preg_match('/^[+-]?\d+(\.\d+)?([eE][+-]?\d+)?$/', trim($x));
+}
+
+// Функция проверки баланса скобок
+function checkParenthesesBalance($expr) {
+    $count = 0;
+    for ($i = 0; $i < strlen($expr); $i++) {
+        if ($expr[$i] === '(') {
+            $count++;
+        } elseif ($expr[$i] === ')') {
+            $count--;
+            if ($count < 0) {
+                return false; 
+            }
+        }
+    }
+    return $count === 0; 
 }
 
 // проверки 
@@ -49,6 +67,11 @@ function calculate($expr) {
     $expr = trim($expr);
     if ($expr === '') return 'Ошибка: пустое выражение';
     
+    // Проверка баланса скобок
+    if (!checkParenthesesBalance($expr)) {
+        return 'Ошибка: не хватает скобки';
+    }
+    
     if (isnum($expr)) {
         return floatval($expr);
     }
@@ -63,32 +86,54 @@ function calculate($expr) {
     }
     $expr = preg_replace('/\(-(\d+)\)/', '(0-$1)', $expr);
     $expr = preg_replace('/-\(-(\d+)\)/', '$1', $expr);
+
+    if (preg_match('/^-\(?(\d+(?:\.\d+)?)\)?$/', $expr, $m)) {
+        return -floatval($m[1]);
+    }
     
-    
-    // sin
-    if (preg_match('/sin\(([^()]+)\)/', $expr, $m)) {
-        $arg = calculate($m[1]);
-        if (!isnum($arg)) return $arg;
-        $res = mysin($arg);
-        $expr = str_replace($m[0], $res, $expr);
-        return calculate($expr);
+    // // sin
+    // if (preg_match('/sin\(([^()]+)\)/', $expr, $m)) {
+    //     $arg = calculate($m[1]);
+    //     if (!isnum($arg)) return $arg;
+    //     $res = mysin($arg);
+    //     $expr = str_replace($m[0], $res, $expr);
+    //     return calculate($expr);
+    // }
+    // // cos
+    // if (preg_match('/cos\(([^()]+)\)/', $expr, $m)) {
+    //     $arg = calculate($m[1]);
+    //     if (!isnum($arg)) return $arg;
+    //     $res = mycos($arg);
+    //     $expr = str_replace($m[0], $res, $expr);
+    //     return calculate($expr);
+    // }
+    // // tan
+    // if (preg_match('/tan\(([^()]+)\)/', $expr, $m)) {
+    //     $arg = calculate($m[1]);
+    //     if (!isnum($arg)) return $arg;
+    //     $res = mytan($arg);
+    //     $expr = str_replace($m[0], $res, $expr);
+    //     return calculate($expr);
+    // }
+
+    // Замена по тесту
+    $trigFunctions = ['sin', 'cos', 'tan'];
+    foreach ($trigFunctions as $func) {
+        if (preg_match('/' . $func . '\(([^()]+)\)/', $expr, $m)) {
+            $arg = calculate($m[1]); 
+            if (!isnum($arg)) return $arg;
+            
+            try {
+                $res = evaluateTrig($func, floatval($arg));
+            } catch (InvalidArgumentException $e) {
+                return $e->getMessage();
+            }
+            
+            $expr = str_replace($m[0], $res, $expr);
+            return calculate($expr); 
+        }
     }
-    // cos
-    if (preg_match('/cos\(([^()]+)\)/', $expr, $m)) {
-        $arg = calculate($m[1]);
-        if (!isnum($arg)) return $arg;
-        $res = mycos($arg);
-        $expr = str_replace($m[0], $res, $expr);
-        return calculate($expr);
-    }
-    // tan
-    if (preg_match('/tan\(([^()]+)\)/', $expr, $m)) {
-        $arg = calculate($m[1]);
-        if (!isnum($arg)) return $arg;
-        $res = mytan($arg);
-        $expr = str_replace($m[0], $res, $expr);
-        return calculate($expr);
-    }
+
     // корень
     if (preg_match('/sqrt\(([^()]+)\)/', $expr, $m)) {
         $arg = calculate($m[1]);
@@ -146,9 +191,10 @@ function calculate($expr) {
     }
     
     // умножение и деление
-    if (preg_match('/([0-9.eE+-]+)([*\/])([0-9.eE+-]+)/', $expr, $m)) {
+    if (preg_match('/(-?(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)\s*[*\/])\s*(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/', $expr, $m)) {
         $a = floatval($m[1]);
         $b = floatval($m[3]);
+        if ($m[1])
         if ($m[2] == '*') {
             $res = $a * $b;
         } else {
@@ -191,18 +237,40 @@ $expression = '';
 
 if (isset($_GET['expr'])) {
     $expression = trim($_GET['expr']);
-    if ($expression === '') {
-        $error = 'Выражение не задано!';
+    // if ($expression === '') {
+    //     $error = 'Выражение не задано!';
+    // } else {
+    //     $res = calculate($expression);
+    //     if (isnum($res)) {
+    //         $result = $res;
+    //         if ($result == floor($result)) $result = floor($result);
+    //         else $result = round($result, 10);
+    //     } else {
+    //         $error = $res;
+    //     }
+    // }
+}
+else {
+    $filePath = __DIR__ . '/Task/expression.txt'; 
+    if (file_exists($filePath) && is_readable($filePath)) {
+        $expression = trim(file_get_contents($filePath));
     } else {
-        $res = calculate($expression);
-        if (isnum($res)) {
-            $result = $res;
-            if ($result == floor($result)) $result = floor($result);
-            else $result = round($result, 10);
-        } else {
-            $error = $res;
-        }
+        $error = 'Файл с выражением не найден или недоступен для чтения.';
     }
+}
+
+// Вычисляем, если выражение задано
+if ($expression !== '' && $error === '') {
+    $res = calculate($expression);
+    if (isnum($res)) {
+        $result = $res;
+        if ($result == floor($result)) $result = floor($result);
+        else $result = round($result, 10);
+    } else {
+        $error = $res;
+    }
+} elseif ($error === '') {
+    $error = 'Выражение не задано!';
 }
 ?>
 
